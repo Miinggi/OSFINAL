@@ -110,6 +110,7 @@ def alpha_blending(landmarked_image, watermark, output_filename):
 
     cv2.imshow('output', output)
     # cv2.waitKey()
+    
 
 
 if __name__ == "__main__":
