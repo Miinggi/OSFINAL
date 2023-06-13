@@ -26,10 +26,7 @@ import dlib
 #2a. identify faces using dlib and landmark. If face exist save if not, delete
 #2b. create new directory if search is new if not, add to existing directory.(try to narrow down to adjective)
 
-
-
 nltk.download('wordnet')
-
 
 #------------------gensim------------------
 
@@ -85,8 +82,6 @@ def draw_landmark(image_path):
     
     return image
 
-
-
 def alpha_blending(landmarked_image, watermark, output_filename):
     blendImg = cv2.imread(watermark, cv2.IMREAD_UNCHANGED)
     alpha = blendImg[:, :, 3]
@@ -115,16 +110,6 @@ def alpha_blending(landmarked_image, watermark, output_filename):
 
     cv2.imshow('output', output)
     # cv2.waitKey()
-
-
-
-
-
-
-
-
-from nltk.corpus import wordnet
-
 
 
 if __name__ == "__main__":
@@ -164,5 +149,4 @@ if __name__ == "__main__":
             print(updated_fnames)
 else:
             print("Invalid adjective or noun.")
-
 
