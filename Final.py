@@ -5,9 +5,6 @@ import nltk
 from nltk.corpus import wordnet
 import gensim.downloader
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.path import Path
-from matplotlib.patches import PathPatch
 import time
 from selenium import webdriver
 from bs4 import BeautifulSoup
