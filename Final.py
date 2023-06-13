@@ -33,29 +33,7 @@ import dlib
 
 nltk.download('wordnet')
 
-#noun detector
-def is_noun(word):
-    synsets = wordnet.synsets(word)
-    for synset in synsets:
-        if synset.pos() == 'n':
-            return True
-    return False
 
-#adj detector
-def is_adjective(word):
-    synsets = wordnet.synsets(word)
-    for synset in synsets:
-        if synset.pos() == 'a':
-            return True
-    return False
-
-#search query
-adj = input("enter an adjective: ")
-noun = input("enter a noun: ")
-target_appearance = [adj, noun]
-
-query = (f'{adj} {noun}')
-print(query)
 #------------------gensim------------------
 
 #image collector
@@ -91,50 +69,103 @@ def draw_landmark(image_path):
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
     image = cv2.imread(image_path)
+    faces = list(detector(image, 0))
+
+    if len(faces) == 0:
+        os.remove(image_path)
+        print(f'Deleted {image_path} because no face was detected')
+        return None
     
-    # for face_rect in detector(image, 0):
-    #     shape = predictor(image, face_rect)
-    #     for x in range(68):
-    #         pts = (shape.part(x).x, shape.part(x).y)
-    #         cv2.circle(image, pts, 1, (255, 0, 0), cv2.FILLED, cv2.LINE_AA)
-    #         cv2.putText(image, f"{x}", pts, cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    for face_rect in faces:
+        shape = predictor(image, face_rect)
+        for x in range(68):
+            pts = (shape.part(x).x, shape.part(x).y)
+            cv2.circle(image, pts, 1, (255, 0, 0), cv2.FILLED, cv2.LINE_AA)
+            cv2.putText(image, f"{x}", pts, cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    
     cv2.imshow("landmark", image)
-    cv2.waitKey()
+    # cv2.waitKey()
+    
+    return image
 
 
 
-#alpha blending def
-def alpha_blending():
-    blendImg = cv2.imread('trial.png', cv2.IMREAD_UNCHANGED)
+def alpha_blending(landmarked_image, watermark, output_filename):
+    blendImg = cv2.imread(watermark, cv2.IMREAD_UNCHANGED)
     alpha = blendImg[:, :, 3]
     blendImg_bgr = blendImg[:, :, :3]
 
-    baseImg = cv2.imread('cat.jpg')
-
     h, w, _ = blendImg.shape
-    pos_y = baseImg.shape[0] - h - 10
+    pos_y = landmarked_image.shape[0] - h - 10
     pos_x = 10
 
-    alpha = np.stack([alpha, alpha, alpha], axis=2)/255
+    # Check if the blend image exceeds the boundaries of the base image
+    if pos_y < 0 or pos_x < 0 or pos_y + h > landmarked_image.shape[0] or pos_x + w > landmarked_image.shape[1]:
+        raise ValueError("Blend image exceeds the boundaries of the base image.")
 
-    output = np.array(baseImg)
+    # Resize the blend image to match the region of interest in the base image
+    blendImg_bgr = cv2.resize(blendImg_bgr, (w, h))
+
+    alpha = np.stack([alpha, alpha, alpha], axis=2) / 255
+
+    output = np.array(landmarked_image)
     bg = output[pos_y: pos_y + h, pos_x: pos_x + w]
     output[pos_y:pos_y + h, pos_x: pos_x + w] = (blendImg_bgr * alpha) + bg * (1 - alpha)
 
-    cv2.imshow('blendImg', blendImg)
-    cv2.imshow('alpha', alpha)
-    cv2.imshow('origin', baseImg)
+    # Save the output image after alpha blending with a unique filename
+    output_path = os.path.join(os.path.dirname(image_path), output_filename)
+    cv2.imwrite(output_path, output)
+
     cv2.imshow('output', output)
-    cv2.waitKey()
+    # cv2.waitKey()
 
-imgs = image_collection(query)
 
-dname = f'pinterest_images {query}'
-print(dname)
-fnames = os.listdir(dname)
-print(fnames)
 
-for fname in fnames:
-    image_path = os.path.join(dname, fname)
-    print(image_path)
-    is_face_present(image_path)
+
+
+
+
+
+from nltk.corpus import wordnet
+
+
+
+if __name__ == "__main__":
+    counter = 0  # Counter to keep track of the number of alpha-blended images
+    
+    while counter < 100:
+        # Search query
+            adj = input("enter an adjective: ")
+            noun = input("enter a noun: ")
+            # target_appearance = [adj, noun]
+
+            query = (f'{adj} {noun}')
+            print(query)
+
+            imgs = image_collection(query)
+
+            dname = f'pinterest_images {query}'
+            fnames = os.listdir(dname)
+
+            watermark = 'pepesmile.png'
+
+            for fname in fnames:
+                image_path = os.path.join(dname, fname)
+                landmarked_image = draw_landmark(image_path)
+                if landmarked_image is not None:
+                    output_filename = f"alpha_blended_{fname}"
+                    alpha_blending(landmarked_image, watermark, output_filename)
+                    os.remove(image_path)  # Remove the original image
+
+                    counter += 1  # Increment the counter
+                    print(counter)
+
+                    if counter == 100:
+                        break  # Stop further processing once 100 alpha-blended images are generated
+
+            updated_fnames = os.listdir(dname)
+            print(updated_fnames)
+else:
+            print("Invalid adjective or noun.")
+
+
