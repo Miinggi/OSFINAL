@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 import requests
 import cv2
 import os
-import tqdm
 
 #1
 #gensim
