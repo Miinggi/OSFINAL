@@ -15,13 +15,16 @@ import cv2
 import os
 import tqdm
 
+#1
+#gensim
+#download wordnet corpus
 nltk.download('wordnet')
 word = input("enter a search: ")
 query = word.split()
 print(query)
 model = gensim.downloader.load('glove-twitter-200')
 
-target_appearance = [query]
+target_appearance = [query[0], query[1]]
 similar_words = model.most_similar(positive=target_appearance, topn=100)
 
 for word, similarity in similar_words:
