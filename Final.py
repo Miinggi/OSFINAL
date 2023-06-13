@@ -49,11 +49,40 @@ nltk.download('wordnet')
 word = input("enter a search: ")
 query = word.split()
 print(query)
-model = gensim.downloader.load('glove-twitter-200')
+# model = gensim.downloader.load('glove-twitter-200')
 
-target_appearance = [query[0]]
-similar_words = model.most_similar(positive=target_appearance, topn=100)
+# target_appearance = [query[0]]
+# similar_words = model.most_similar(positive=target_appearance, topn=100)
 
-for word, similarity in similar_words:
-#   print(word, is_adjective(word), similarity)
-    print(word, similarity)
+# for word, similarity in similar_words:
+# #   print(word, is_adjective(word), similarity)
+#     print(word, similarity)
+
+
+#2
+#selenium
+# import and mix dlib face identifier to this.
+driver = webdriver.Chrome()
+
+search_keyword = word
+search_url = f'https://www.pinterest.com/search/pins/?q={search_keyword}'
+driver.get(search_url)
+time.sleep(5)
+
+soup = BeautifulSoup(driver.page_source, 'html.parser')
+image_tags = soup.find_all('img', {'src': True})
+
+if not os.path.exists('pinterest_images'):
+  os.makedirs('pinterest_images')
+
+for idx, img in enumerate(image_tags):
+  image_url = img['src']
+  image_url = image_url.replace("236x", "736x", 1)
+  image_name = f"{search_keyword}_{idx}.jpg"
+  image_path = os.path.join('pinterest_images', image_name)
+
+  response = requests.get(image_url)
+  with open(image_path, 'wb') as f:
+    f.write(response.content)
+
+driver.quit()
